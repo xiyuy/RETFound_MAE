@@ -1,25 +1,28 @@
 ## RETFound - A foundation model for retinal imaging
 
 
-This is the official repo for RETFound, which is based on [MAE](https://github.com/facebookresearch/mae):
+This is the official repo for [RETFound: a foundation model for generalizable disease detection from retinal images](https://www.nature.com/articles/s41586-023-06555-x), which is based on [MAE](https://github.com/facebookresearch/mae):
 
 Please contact 	**ykzhoua@gmail.com** or **yukun.zhou.19@ucl.ac.uk** if you have questions.
 
 Keras version implemented by Yuka Kihara can be found [here](https://github.com/uw-biomedical-ml/RETFound_MAE)
 
 
-### Key features
+### 📝Key features
 
 - RETFound is pre-trained on 1.6 million retinal images with self-supervised learning
 - RETFound has been validated in multiple disease detection tasks
 - RETFound can be efficiently adapted to customised tasks
 
 
-### News
+### 🎉News
 
-- A [visualisation demo](https://github.com/rmaphoh/RETFound_MAE/blob/main/RETFound_visualize.ipynb) is added
+- 🎄2023/12: [Colab notebook](https://colab.research.google.com/drive/1_X19zdMegmAlqPAEY0Ao659fzzzlx2IZ?usp=sharing) is now online - free GPU & simple operation!!!
+- 2023/09: a [visualisation demo](https://github.com/rmaphoh/RETFound_MAE/blob/main/RETFound_visualize.ipynb) is added
+- 2023/10: change the hyperparameter of [input_size](https://github.com/rmaphoh/RETFound_MAE#:~:text=finetune%20./RETFound_cfp_weights.pth%20%5C-,%2D%2Dinput_size%20224,-For%20evaluation%20only) for any image size
 
-### Install environment
+
+### 🔧Install environment
 
 1. Create environment with conda:
 
@@ -37,7 +40,7 @@ pip install -r requirement.txt
 ```
 
 
-### Fine-tuning with RETFound weights
+### 🌱Fine-tuning with RETFound weights
 
 To fine tune RETFound on your own data, follow these steps:
 
@@ -78,7 +81,8 @@ python -m torch.distributed.launch --nproc_per_node=1 --master_port=48798 main_f
     --nb_classes 5 \
     --data_path ./IDRiD_data/ \
     --task ./finetune_IDRiD/ \
-    --finetune ./RETFound_cfp_weights.pth
+    --finetune ./RETFound_cfp_weights.pth \
+    --input_size 224
 
 ```
 
@@ -97,7 +101,8 @@ python -m torch.distributed.launch --nproc_per_node=1 --master_port=48798 main_f
     --nb_classes 5 \
     --data_path ./IDRiD_data/ \
     --task ./internal_IDRiD/ \
-    --resume ./finetune_IDRiD/checkpoint-best.pth
+    --resume ./finetune_IDRiD/checkpoint-best.pth \
+    --input_size 224
 
 ```
 
@@ -139,4 +144,20 @@ trunc_normal_(model.head.weight, std=2e-5)
 
 print("Model = %s" % str(model))
 ```
+
+
+### 📃Citation
+
+If you find this repository useful, please consider citing this paper:
+```
+@article{zhou2023foundation,
+  title={A foundation model for generalizable disease detection from retinal images},
+  author={Zhou, Yukun and Chia, Mark A and Wagner, Siegfried K and Ayhan, Murat S and Williamson, Dominic J and Struyven, Robbert R and Liu, Timing and Xu, Moucheng and Lozano, Mateo G and Woodward-Court, Peter and others},
+  journal={Nature},
+  pages={1--8},
+  year={2023},
+  publisher={Nature Publishing Group UK London}
+}
+```
+
 
