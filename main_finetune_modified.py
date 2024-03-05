@@ -34,7 +34,7 @@ import util.misc as misc
 from util.datasets_modified import build_dataset
 from util.pos_embed import interpolate_pos_embed
 from util.misc import NativeScalerWithGradNormCount as NativeScaler
-from util.loss_functions import FocalLoss
+from util.loss_functions import FocalLoss, ClassBalancedFocalLoss
 
 import models_vit_modified
 
@@ -166,7 +166,8 @@ def get_args_parser():
     parser.add_argument('--data_sources', default=['BRSET', 'messidor2'], type=list)
 
     # loss functions
-    parser.add_argument('--loss_functions', default="focal", type=str)
+    parser.add_argument('--loss_functions', default="focal", type=str,
+                        help="select one of ")
 
     return parser
 
@@ -362,13 +363,16 @@ def main(args):
     optimizer = torch.optim.AdamW(param_groups, lr=args.lr)
     loss_scaler = NativeScaler()
 
-    if mixup_fn is not None:
+    if (mixup_fn is not None) & (args.loss_functions == "soft_target"):
         # smoothing is handled with mixup label transform
         criterion = SoftTargetCrossEntropy()
-    elif args.smoothing > 0.:
+    elif (args.smoothing > 0.) & (args.loss_functions == "label_smoothing"):
         criterion = LabelSmoothingCrossEntropy(smoothing=args.smoothing)
     elif args.loss_functions == "focal":
-        criterion = FocalLoss()
+        criterion = FocalLoss(gamma=2)
+    elif args.loss_functions == "class_balanced_focal":
+        criterion = ClassBalancedFocalLoss(gamma=2, beta=0.9999, samples_per_cls=[478, 277, 10621])
+        # BRSET number of training samples per class is [478, 277, 10621] (NPDR, PDR, Normals)
     else:
         criterion = torch.nn.CrossEntropyLoss()
 

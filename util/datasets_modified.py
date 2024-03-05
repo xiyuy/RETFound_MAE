@@ -4,14 +4,11 @@
 # --------------------------------------------------------
 
 import os
-from torchvision import datasets, transforms
+from torchvision import transforms
 from timm.data import create_transform
 from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
-# Thought: Create another function, build_combined_dataset().
-#          - This function is for concatenate datasets from different sources.
-#          - You should pass in global normalization stats to this function.
-#          - If this function is built, we should modify main_finetune_modified.py. 
+from util.modified_image_folder import ModifiedImageFolder 
 
 def build_dataset(is_train, args, data_source=None, mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD):
 
@@ -24,7 +21,7 @@ def build_dataset(is_train, args, data_source=None, mean=IMAGENET_DEFAULT_MEAN, 
         # print("Global normalization is True!!!")
         root = os.path.join(args.data_path, data_source, is_train)
 
-    dataset = datasets.ImageFolder(root, transform=transform)
+    dataset = ModifiedImageFolder(root, transform=transform)
 
     return dataset
 

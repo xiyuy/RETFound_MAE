@@ -79,7 +79,7 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
     if log_writer is not None:
         print('log_dir: {}'.format(log_writer.log_dir))
 
-    for data_iter_step, (samples, targets) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
+    for data_iter_step, (paths, samples, targets) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
 
         # we use a per iteration (instead of per epoch) lr scheduler
         if data_iter_step % accum_iter == 0:
@@ -161,31 +161,40 @@ def evaluate(data_loader, model, device, task, epoch, mode, num_class):
 
     model.module.fc_norm.register_forward_hook(get_activation('fc_norm'))
 
+    paths_list = []
     embeddings_list = []
     targets_list = []
 
     for batch in metric_logger.log_every(data_loader, 10, header):
-        images = batch[0]
+        paths = batch[0]
+        images = batch[1]
         target = batch[-1]
+        paths = list(paths)
         images = images.to(device, non_blocking=True)
         target = target.to(device, non_blocking=True)
         true_label=F.one_hot(target.to(torch.int64), num_classes=num_class)
-        print("Examine the image and target shape during evaluation process:")
-        print("Shape of the images from one batch:")
-        print(images.shape)
-        print("Shape of the target from one batch:")
-        print(target.shape)
+        # print("Examine the paths, image and target shape during evaluation process:")
+        # print("Numebr of paths in the batch:")
+        # print(len(paths))
+        # print("Shape of the images from one batch:")
+        # print(images.shape)
+        # print("Shape of the target from one batch:")
+        # print(target.shape)
 
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
-            print("Shape of the output from model:")
-            print(output.shape)
-            print("Values of the output from model:")
-            print(output)
+
+            # print("Shape of the output from model:")
+            # print(output.shape)
+            # print("Values of the output from model:")
+            # print(output)
+
             embedding = activation['fc_norm']
+            paths_list.extend(paths)
             embeddings_list.extend(embedding.cpu().detach().numpy())
             targets_list.extend(target.cpu().detach().numpy())
+
             loss = criterion(output, target)
             prediction_softmax = nn.Softmax(dim=1)(output)
             _,prediction_decode = torch.max(prediction_softmax, 1)
@@ -233,11 +242,13 @@ def evaluate(data_loader, model, device, task, epoch, mode, num_class):
         cm.plot(cmap=plt.cm.Blues,number_label=True,normalized=True,plot_lib="matplotlib")
         plt.savefig(task+'confusion_matrix_test.jpg',dpi=600,bbox_inches ='tight')
     
+    print("Number of stored paths", len(paths_list))
     print("Shape of all embeddings:", np.array(embeddings_list).shape)
     print("Shape of all targets:", np.array(targets_list).shape)
 
-    # np.save(file="/home/opc/Documents/GitHub/RETFound_MAE/data/embeddings/messidor2_class3_" + str(mode) + "_embeddings1024.npy", arr=np.array(embeddings_list))
-    # np.save(file="/home/opc/Documents/GitHub/RETFound_MAE/data/embeddings/messidor2_class3_" + str(mode) + "_embeddings1024_targets.npy", arr=np.array(targets_list))
+    np.save(file="/home/opc/Documents/GitHub/RETFound_MAE/data/embeddings/BRSET_class3_" + str(mode) + "_embeddings1024_paths.npy", arr=np.array(paths_list))
+    np.save(file="/home/opc/Documents/GitHub/RETFound_MAE/data/embeddings/BRSET_class3_" + str(mode) + "_embeddings1024.npy", arr=np.array(embeddings_list))
+    np.save(file="/home/opc/Documents/GitHub/RETFound_MAE/data/embeddings/BRSET_class3_" + str(mode) + "_embeddings1024_targets.npy", arr=np.array(targets_list))
 
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()},auc_roc
 
